@@ -2,8 +2,13 @@
   "ExpandedNodes": [
     "",
     "\\sources",
-    "\\sources\\engine"
+    "\\sources\\3rd_party",
+    "\\sources\\application",
+    "\\sources\\engine",
+    "\\sources\\engine\\import",
+    "\\sources\\engine\\render",
+    "\\sources\\shaders"
   ],
-  "SelectedNode": "\\sources\\CMakeLists.txt",
+  "SelectedNode": "\\sources\\shaders\\arrow_vs.glsl",
   "PreviewInSolutionExplorer": false
 }

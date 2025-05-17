@@ -1,29 +1,10 @@
-/* #include <vector>
 #include "debug_arrow.h"
-#include "shader/shader.h"
-#include "resources/resources.h"
 
-void draw_arrow(const mat4 &transform, const vec3 &from, const vec3 &to, vec3 color, float size, bool depth_ignore)
+std::unique_ptr<DebugArrow> DebugArrow::_instance = nullptr;
+
+static void add_triangle(vec3 a, vec3 b, vec3 c, std::vector<uint>& indices, std::vector<vec3>& vert, std::vector<vec3>& normal)
 {
-  ecs::get_singleton<DebugArrow>()->add_arrow(transform * vec4(from, 1), transform * vec4(to, 1), color, size, depth_ignore);
-}
-void draw_arrow(const vec3 &from, const vec3 &to, vec3 color, float size, bool depth_ignore)
-{
-  ecs::get_singleton<DebugArrow>()->add_arrow(from, to, color, size, depth_ignore);
-}
-void draw_transform(const Transform &transform)
-{
-  vec3 p = transform.get_position();
-  mat3 rotation = transform.get_rotation();
-  for (int i = 0; i < 3; i++)
-  {
-    vec3 n(0.f);
-    n[i] = 1.f;
-    draw_arrow(p, p + rotation * n * 0.3f, n, 0.03f, false);
-  }
-}
-void DebugArrow::add_triangle(vec3 a, vec3 b, vec3 c, std::vector<uint> &indices, std::vector<vec3> &vert, std::vector<vec3> &normal)
-{
+  // takes coordinates of a triangle, pushes them appropriately to vectors
   uint k = vert.size();
   vec3 n = normalize(cross(b - a, c - a));
   indices.push_back(k);
@@ -36,9 +17,13 @@ void DebugArrow::add_triangle(vec3 a, vec3 b, vec3 c, std::vector<uint> &indices
   normal.push_back(n);
   normal.push_back(n);
 }
-DebugArrow::DebugArrow()
-{
-  arrowMaterial = Material("arrows");
+
+
+DebugArrow::DebugArrow() {
+  // Create material
+  arrowMaterial = make_material("arrow", "sources/shaders/arrow_vs.glsl", "sources/shaders/arrow_ps.glsl");
+
+  // Create mesh out of triangles pointing towards C and a "handle"
   std::vector<uint> indices;
   std::vector<vec3> vert;
   std::vector<vec3> normal;
@@ -53,61 +38,76 @@ DebugArrow::DebugArrow()
     vec3 p2 = vec3(cos(a2), 0, sin(a2));
     add_triangle(p2, p1, c, indices, vert, normal);
   }
-
   add_triangle(p[0], p[1], p[2], indices, vert, normal);
   add_triangle(p[0], p[2], p[3], indices, vert, normal);
-  arrow = Mesh(indices, vert, normal);
+  arrowMesh = create_mesh("arrow", indices, vert, normal);
 }
 
-mat4 directionMatrix(vec3 from, vec3 to)
-{
-
-  from = normalize(from);
-  to = normalize(to);
-  quat q(from, to);
-  return toMat4(q);
+void DebugArrow::add_arrow(const glm::mat4x4& transform, const vec3& from, const vec3& to, const vec3 color, float size) {
+  instance()->_add_arrow(transform, from, to, color, size);
 }
-void DebugArrow::add_arrow(const vec3 &from, const vec3 &to, vec3 color, float size, bool depth_ignore)
-{
-  vec3 d = to - from;
-  mat4 t = translate(mat4(1.f), from);
-  float len = length(d);
-  if (len < 0.01f)
-    return;
-  mat4 s = scale(mat4(1.f), vec3(size, len, size));
-
-  mat4 r = directionMatrix(vec3(0, 1, 0), d);
-  if (depth_ignore)
-    depthIgnore.emplace_back(Arrow{t * r * s, vec4(color, 1.f)});
-  else
-    depthNotIgnore.emplace_back(Arrow{t * r * s, vec4(color, 1.f)});
+void DebugArrow::add_arrow(const vec3& from, const vec3& to, const vec3 color, float size) {
+  instance()->_add_arrow(from, to, color, size);
 }
-void DebugArrow::render_depth_case(UniformBuffer &instanceData, std::vector<Arrow> &arrows, bool ignoreDepth, bool wire_frame)
-{
-  uint instanceCount = arrows.size(), instanceSize = 0;
-  if (instanceCount == 0)
-    return;
-  char *data = instanceData.get_buffer(0, (instanceCount + 1) * instanceSize);
-  // i don't know why need to +1, but it din't work without it
-  memcpy(data, arrows.data(), instanceCount * instanceSize);
-  instanceData.flush_buffer(instanceCount * instanceSize);
 
-  glDepthFunc(ignoreDepth ? GL_ALWAYS : GL_LESS);
-  glDepthMask(ignoreDepth ? GL_FALSE : GL_TRUE);
-  arrow.render_instances(instanceCount, wire_frame);
+void DebugArrow::render(const mat4& cameraProjView, vec3 cameraPosition, const DirectionLight& light) {
+  instance()->_render(cameraProjView, cameraPosition, light);
 }
-void DebugArrow::render(UniformBuffer &instanceData, bool wire_frame)
-{
-  if (instanceData.size() && arrowMaterial.get_shader())
-  {
-    const Shader &arrowShader = arrowMaterial.get_shader();
-    arrowShader.use();
-    render_depth_case(instanceData, depthIgnore, true, wire_frame);
-    render_depth_case(instanceData, depthNotIgnore, false, wire_frame);
+
+void DebugArrow::_add_arrow(const glm::mat4x4& transform, const vec3& from, const vec3& to, const vec3 color, float size) {
+  _add_arrow(transform * vec4(from, 1), transform * vec4(to, 1), color, size);
+}
+void DebugArrow::_add_arrow(const vec3& from, const vec3& to, const vec3 color, float size) {
+  arrows.push_back(Arrow(from, to, color, size));
+}
+
+void DebugArrow::_render(const mat4& cameraProjView, vec3 cameraPosition, const DirectionLight& light) {
+  if (arrows.empty()) return;
+
+  // Manage shader
+  const auto& shader = arrowMaterial->get_shader();
+  glDepthFunc(GL_ALWAYS);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  shader.use();
+
+  shader.set_mat4x4("ViewProjection", cameraProjView);
+  shader.set_vec3("CameraPosition", cameraPosition);
+  shader.set_vec3("LightDirection", glm::normalize(light.lightDirection));
+  shader.set_vec3("AmbientLight", light.ambient);
+  shader.set_vec3("SunLight", light.lightColor);
+
+  /*// Rearrange arrows data
+  std::vector<mat4> instancesTm;
+  std::vector<vec4> instancesColor;
+  for (const Arrow& arrow : arrows) {
+    instancesTm.push_back(arrow.calc_transform());
+    instancesColor.push_back(arrow.calc_color());
   }
-  depthIgnore.clear();
-  depthNotIgnore.clear();
+  // Render the arrows themselves in batches
+  const int BATCH_SIZE = 128;
+  for (int i = 0; i < arrows.size(); i += BATCH_SIZE)
+  {
+    int count = std::min(BATCH_SIZE, (int)(arrows.size()) - i);
+    shader.set_mat4x4("ArrowTm", std::span(instancesTm.data() + i, count));
+    shader.set_vec4("ArrowColor", std::span(instancesColor.data() + i, count));
+    render(arrowMesh, count);
+  }*/
+
+  // Render the arrows themselves
+  for (int i = 0; i < arrows.size(); i += 1)
+  {
+    shader.set_mat4x4("ArrowTm", arrows[i].calc_transform());
+    shader.set_vec4("ArrowColor", arrows[i].calc_color());
+    glBindVertexArray(arrowMesh->vertexArrayBufferObject);
+    glDrawElementsBaseVertex(GL_TRIANGLES, arrowMesh->numIndices, GL_UNSIGNED_INT, 0, 0);
+  }
+
   glDepthFunc(GL_LESS);
   glDepthMask(GL_TRUE);
+  glDisable(GL_BLEND);
+
+  // Reset arrows
+  arrows.clear();
 }
- */

@@ -8,6 +8,7 @@
 #include "glad/glad.h"
 
 #include "import/model.h"
+#include <iostream>
 
 MeshPtr create_mesh(const aiMesh *mesh)
 {
@@ -80,7 +81,56 @@ MeshPtr create_mesh(const aiMesh *mesh)
       weights[i] *= 1.f / s;
     }
   }
-  return create_mesh(mesh->mName.C_Str(), indices, vertices, normals, uv, weights, weightsIndex);
+
+  auto meshPtr = create_mesh(mesh->mName.C_Str(), indices, vertices, normals, uv, weights, weightsIndex);
+
+  if (mesh->HasBones())
+  {
+    int numBones = mesh->mNumBones;
+    meshPtr->bones.resize(numBones);
+    for (int i = 0; i < numBones; i++)
+    {
+      const aiBone* bone = mesh->mBones[i];
+      assert(bone->mNode != nullptr && "Model had no bones. Make sure you passed flag aiProcess_PopulateArmatureData to ReadFile");
+
+      glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(&bone->mOffsetMatrix.a1);
+      mOffsetMatrix = glm::transpose(mOffsetMatrix);
+      meshPtr->bones[i].invBindPose = mOffsetMatrix;
+      meshPtr->bones[i].bindPose = glm::inverse(mOffsetMatrix);
+      meshPtr->bones[i].name = bone->mName.C_Str();
+
+      for (int child_node_i = 0; child_node_i < bone->mNode->mNumChildren; ++child_node_i) {
+        const aiNode* bone_child_node = bone->mNode->mChildren[child_node_i];
+
+
+        meshPtr->bones[i].children.push_back(Mesh::Bone());
+
+        glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(&bone_child_node->mTransformation.a1);
+        mOffsetMatrix = glm::transpose(mOffsetMatrix);
+        meshPtr->bones[i].children.back().invBindPose = mOffsetMatrix;
+        meshPtr->bones[i].children.back().bindPose = glm::inverse(mOffsetMatrix);
+        meshPtr->bones[i].children.back().name = bone_child_node->mName.C_Str();
+
+        /*for (int child_mesh_i = 0; child_mesh_i < bone_child_node->mNumMeshes; ++child_mesh_i) {
+          const aiNode* bone_child_mesh = bone_child_node->mMeshes[child_mesh_i];
+          for (int child_mesh_i = 0; child_mesh_i < bone_child_mesh->; ++child_mesh_i) {
+            const aiNode* bone_child_mesh = bone_child_node->mMeshes[child_mesh_i];
+          }
+        }*/
+
+
+        /*meshPtr->bones[i].children.push_back(Mesh::Bone());
+
+        glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(bone_child->mOffsetMatrix.a1);
+        mOffsetMatrix = glm::transpose(mOffsetMatrix);
+        meshPtr->bones[i].children[j].invBindPose = mOffsetMatrix;
+        meshPtr->bones[i].children[j].bindPose = glm::inverse(mOffsetMatrix);
+        meshPtr->bones[i].children[j].name = bone_child->mName.C_Str();*/
+      }
+    }
+  }
+
+  return meshPtr;
 }
 
 ModelAsset load_model(const char *path)
@@ -91,7 +141,7 @@ ModelAsset load_model(const char *path)
   importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 1.f);
 
   importer.ReadFile(path, aiPostProcessSteps::aiProcess_Triangulate | aiPostProcessSteps::aiProcess_LimitBoneWeights |
-                              aiPostProcessSteps::aiProcess_GenNormals | aiProcess_GlobalScale | aiProcess_FlipWindingOrder);
+                              aiPostProcessSteps::aiProcess_GenNormals | aiProcess_GlobalScale | aiProcess_FlipWindingOrder | aiProcess_PopulateArmatureData);
 
   const aiScene *scene = importer.GetScene();
   ModelAsset model;

@@ -1,4 +1,5 @@
 #include "scene.h"
+#include <iostream>
 
 void application_update(Scene &scene)
 {
@@ -6,4 +7,5 @@ void application_update(Scene &scene)
     scene.userCamera.arcballCamera,
     scene.userCamera.transform,
     engine::get_delta_time());
+  // std::cout << "Update" << std::endl;
 }

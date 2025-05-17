@@ -1,6 +1,7 @@
 Builds
 resources
 .vscode
+.vs
 Tools
 assimp.dll
 imgui.ini
