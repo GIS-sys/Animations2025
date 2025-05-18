@@ -1,13 +1,37 @@
 #include "scene.h"
 #include "engine/render/debug_arrow.h"
 
-void render_arrows(const std::vector<Mesh::Bone>& bones, const mat4& transform) {
+#include <list>
+#include <iostream>
+
+
+void render_arrows_bones(const std::vector<Mesh::Bone>& bones, const mat4& transform) {
   for (const Mesh::Bone& bone : bones) {
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0.1f, 0, 0), vec3(1, 0, 0), 0.01f);
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0.1f, 0), vec3(0, 1, 0), 0.01f);
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0, 0.1f), vec3(0, 0, 1), 0.01f);
-    for (const auto& bone_child : bone.children) {
-      DebugArrow::add_arrow(glm::vec3((transform * bone.bindPose)[3]), glm::vec3((transform * bone.bindPose * bone_child.bindPose)[3]), vec3(0, 0.5f, 0.5f), 0.03f);
+  }
+}
+
+void render_arrows_nodes(std::list<Mesh::Node>& nodes, const mat4& transform, vec3 color) {
+  if (nodes.empty()) return;
+  for (Mesh::Node& node : nodes) {
+    node.nodeTransformAcc = node.nodeTransform;
+  }
+  for (Mesh::Node& node: nodes) {
+    for (auto& node_child : node.children) {
+      // calculate transform
+      node_child->nodeTransformAcc = node.nodeTransformAcc * node_child->nodeTransform;
+
+      // calculate positions by averaging bones
+      glm::vec3 position = node.get_position(transform);
+      glm::vec3 position_child = node_child->get_position(transform);
+
+      // draw the skeleton (parent->child)
+      DebugArrow::add_arrow(position, position_child, vec3(0, 0.5f, 0.5f), 0.03f);
+      // draw the orientation
+      vec3 vector = vec3(0.1, 0, 0);
+      DebugArrow::add_arrow(position, position + vec3((node_child->nodeTransformAcc * vec4(vector, 1))), color, 0.01f);
     }
   }
 }
@@ -34,7 +58,9 @@ void render_character(const Character &character, const mat4 &cameraProjView, ve
 
   for (const MeshPtr& mesh : character.meshes) {
     render(mesh);
-    render_arrows(mesh->bones, character.transform);
+    render_arrows_bones(mesh->bones, character.transform);
+    render_arrows_nodes(mesh->nodes, character.transform, vec3(0.5f, 0, 0.5f));
+    render_arrows_nodes(mesh->nodesArmature, character.transform, vec3(1.0f, 0, 1.0f));
   }
 }
 

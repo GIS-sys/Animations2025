@@ -18,6 +18,8 @@ I have deleted .vs folder from git (cause it weighed too much), so be sure to re
 
 - load bones
 
-- draw vectors for bones according to their orientation
+- draw vectors for bones according to their orientation (rgb arrows)
 
-- draw connections from bones to their children nodes
+- draw connections from nodes to their children nodes (cyan arrows)
+
+![result of hw1](media/Screenshot_hw1.png)
