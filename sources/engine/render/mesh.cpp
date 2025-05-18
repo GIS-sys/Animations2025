@@ -42,7 +42,7 @@ static MeshPtr create_mesh_impl(const char *name, std::span<const uint32_t> indi
   (init_channel(channelIdx++, channels), ...);
 
   create_indices(indices);
-  return std::make_shared<Mesh>(name, vertexArrayBufferObject, indices.size(), std::vector<Mesh::Bone>());
+  return std::make_shared<Mesh>(name, vertexArrayBufferObject, indices.size(), std::vector<Mesh::Bone>(), std::list<Mesh::Node>(), std::list<Mesh::Node>());
 }
 
 MeshPtr create_mesh(
