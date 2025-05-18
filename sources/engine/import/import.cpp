@@ -10,7 +10,8 @@
 #include "import/model.h"
 #include <iostream>
 #include <list>
-
+#include <assimp/scene.h>
+#include "application/util.h"
 
 
 MeshPtr create_mesh(const aiMesh *mesh)
@@ -113,12 +114,10 @@ MeshPtr create_mesh(const aiMesh *mesh)
         meshPtr->nodes.push_back(Mesh::Node(bone->mNode));
         skeletonNodesMap[bone->mNode] = &meshPtr->nodes.back();
       }
-      skeletonNodesMap[bone->mNode]->bones.push_back(meshPtr->bones.back());
       if (skeletonArmaturesMap.find(bone->mArmature) == skeletonArmaturesMap.end()) {
         meshPtr->nodesArmature.push_back(Mesh::Node(bone->mArmature));
         skeletonArmaturesMap[bone->mArmature] = &meshPtr->nodesArmature.back();
       }
-      skeletonArmaturesMap[bone->mArmature]->bones.push_back(meshPtr->bones.back());
     }
   }
 

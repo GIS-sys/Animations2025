@@ -1,6 +1,23 @@
 #include "scene.h"
 
 
+static std::vector<std::string> animationList;
+
+#include <filesystem>
+static std::vector<std::string> scan_animations(const char* path)
+{
+  std::vector<std::string> animations;
+  for (auto& p : std::filesystem::recursive_directory_iterator(path))
+  {
+    auto filePath = p.path();
+    if (p.is_regular_file() && filePath.extension() == ".fbx")
+      animations.push_back(filePath.string());
+  }
+  return animations;
+}
+
+
+
 static glm::mat4 get_projective_matrix()
 {
   const float fovY = 90.f * DegToRad;
@@ -11,6 +28,8 @@ static glm::mat4 get_projective_matrix()
 
 void application_init(Scene &scene)
 {
+  animationList = scan_animations("resources/Animations");
+
   // Set light
   scene.light.lightDirection = glm::normalize(glm::vec3(-1, -1, 0));
   scene.light.lightColor = glm::vec3(1.f);

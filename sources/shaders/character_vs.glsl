@@ -1,4 +1,3 @@
-
 struct VsOutput
 {
   vec3 EyespaceNormal;
@@ -7,6 +6,7 @@ struct VsOutput
 };
 
 uniform mat4 Transform;
+//uniform mat4 SkinningMatrixes[200]; // looks like the idea is to have an array of transforms for bones, instead of a single one
 uniform mat4 ViewProjection;
 
 
@@ -23,6 +23,15 @@ void main()
 
   vec3 VertexPosition = (Transform * vec4(Position, 1)).xyz;
   vsOutput.EyespaceNormal = (Transform * vec4(Normal, 0)).xyz;
+
+   // mat4 SkinningTransform =
+   //  SkinningMatrixes[BoneIndex.x] * BoneWeight.x +
+   //  SkinningMatrixes[BoneIndex.y] * BoneWeight.y +
+   //  SkinningMatrixes[BoneIndex.z] * BoneWeight.z +
+   //  SkinningMatrixes[BoneIndex.w] * BoneWeight.w;
+
+  // vec3 VertexPosition = (SkinningTransform * vec4(Position, 1)).xyz;
+  // vsOutput.EyespaceNormal = (SkinningTransform * vec4(Normal, 0)).xyz;
 
   gl_Position = ViewProjection * vec4(VertexPosition, 1);
   vsOutput.WorldPosition = VertexPosition;

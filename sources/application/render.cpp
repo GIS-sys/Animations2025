@@ -32,8 +32,8 @@ void render_arrows_nodes(std::list<Mesh::Node>& nodes, const mat4& transform, ve
       // draw the skeleton (parent->child)
       DebugArrow::add_arrow(position, position_child, vec3(0, 0.5f, 0.5f), 0.03f);
       // draw the orientation
-      vec3 vector = vec3(0.1, 0, 0);
-      DebugArrow::add_arrow(position, position + vec3((node_child->nodeTransformAcc * vec4(vector, 1))), color, 0.01f);
+      //vec3 vector = vec3(0.01, 0, 0);
+      //DebugArrow::add_arrow(position, position + vec3((node_child->nodeTransformAcc * vec4(vector, 1))), color, 0.01f);
     }
   }
 }

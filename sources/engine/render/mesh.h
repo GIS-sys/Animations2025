@@ -10,6 +10,7 @@
 #include <assimp/scene.h>
 #include <list>
 
+#include "application/util.h"
 
 struct Mesh
 {
@@ -41,15 +42,11 @@ struct Mesh
     std::vector<Bone> bones;
 
     glm::vec3 get_position(const glm::mat4x4& transform) const {
-      glm::vec3 result = glm::vec3(0.f);
-      for (const Bone& bone : bones) {
-        result += glm::vec3((transform * bone.bindPose)[3]);
-      }
-      return result;
+      return vec3((transform * nodeTransformAcc)[3]);
     }
 
     Node(aiNode* self) : self(self), parent(nullptr) {
-      nodeTransform = glm::mat4x4(glm::make_mat4x4(&(self->mTransformation).a1));
+      nodeTransform = ai_to_glm(self->mTransformation);
     }
   };
 
