@@ -6,10 +6,12 @@
 
 
 void render_arrows_bones(const std::vector<Mesh::Bone>& bones, const mat4& transform) {
+  const float length = 0.3f;
+  const float width = 0.01f;
   for (const Mesh::Bone& bone : bones) {
-    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0.1f, 0, 0), vec3(1, 0, 0), 0.01f);
-    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0.1f, 0), vec3(0, 1, 0), 0.01f);
-    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0, 0.1f), vec3(0, 0, 1), 0.01f);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(length * bone.weight, 0, 0), vec3(1, 0, 0), width);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, length * bone.weight, 0), vec3(0, 1, 0), width);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0, length * bone.weight), vec3(0, 0, 1), width);
   }
 }
 

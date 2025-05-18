@@ -18,6 +18,7 @@ struct Mesh
     std::string name;
     glm::mat4x4 bindPose;
     glm::mat4x4 invBindPose;
+    float weight = 0;
 
     Bone(const ai_real* matrix_value, const char* name_cstr) {
       glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(matrix_value);

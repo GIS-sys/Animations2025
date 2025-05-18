@@ -6,8 +6,10 @@ I have deleted .vs folder from git (cause it weighed too much), so be sure to re
 
 - load bones
 
-- draw vectors for bones according to their orientation (rgb arrows)
+- draw vectors for bones according to their orientation (rgb arrows, length ~ weight)
 
 - draw connections from nodes to their children nodes (cyan arrows)
 
 ![result of hw1](media/Screenshot_hw1.png)
+
+![result of hw1 with weights](media/Screenshot_hw1_weights.png)
