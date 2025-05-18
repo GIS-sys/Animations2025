@@ -10,4 +10,4 @@ I have deleted .vs folder from git (cause it weighed too much), so be sure to re
 
 - draw connections from bones to their children nodes
 
-[result of hw1](media/Screenshot_hw1.png)
+![result of hw1](media/Screenshot_hw1.png)
