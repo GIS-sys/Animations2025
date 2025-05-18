@@ -97,15 +97,16 @@ MeshPtr create_mesh(const aiMesh *mesh)
     {
       const aiBone* bone = mesh->mBones[i];
       assert(bone->mNode != nullptr && "Model had no bones. Make sure you passed flag aiProcess_PopulateArmatureData to ReadFile");
-
-      //std::cout << bone->mName.C_Str() << std::endl;
-      //std::cout << bone->mArmature->mParent->mName.C_Str() << " -a> " << bone->mArmature->mName.C_Str() << std::endl;
-      //std::cout << bone->mNode->mParent->mName.C_Str() << " -n> " << bone->mNode->mName.C_Str() << std::endl;
      
       meshPtr->bones.push_back(Mesh::Bone(
         &bone->mOffsetMatrix.a1,
         bone->mName.C_Str()
       ));
+      for (unsigned j = 0; j < bone->mNumWeights; j++)
+      {
+        meshPtr->bones.back().weight += bone->mWeights[j].mWeight;
+      }
+      meshPtr->bones.back().weight /= bone->mNumWeights;
 
       // load skeleton
       if (skeletonNodesMap.find(bone->mNode) == skeletonNodesMap.end()) {
