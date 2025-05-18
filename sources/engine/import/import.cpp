@@ -10,6 +10,8 @@
 #include "import/model.h"
 #include <iostream>
 
+
+
 MeshPtr create_mesh(const aiMesh *mesh)
 {
   std::vector<uint32_t> indices;
@@ -86,46 +88,23 @@ MeshPtr create_mesh(const aiMesh *mesh)
 
   if (mesh->HasBones())
   {
-    int numBones = mesh->mNumBones;
-    meshPtr->bones.resize(numBones);
-    for (int i = 0; i < numBones; i++)
+    for (int i = 0; i < mesh->mNumBones; i++)
     {
       const aiBone* bone = mesh->mBones[i];
       assert(bone->mNode != nullptr && "Model had no bones. Make sure you passed flag aiProcess_PopulateArmatureData to ReadFile");
-
-      glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(&bone->mOffsetMatrix.a1);
-      mOffsetMatrix = glm::transpose(mOffsetMatrix);
-      meshPtr->bones[i].invBindPose = mOffsetMatrix;
-      meshPtr->bones[i].bindPose = glm::inverse(mOffsetMatrix);
-      meshPtr->bones[i].name = bone->mName.C_Str();
+     
+      meshPtr->bones.push_back(Mesh::Bone(
+        &bone->mOffsetMatrix.a1,
+        bone->mName.C_Str()
+      ));
 
       for (int child_node_i = 0; child_node_i < bone->mNode->mNumChildren; ++child_node_i) {
         const aiNode* bone_child_node = bone->mNode->mChildren[child_node_i];
 
-
-        meshPtr->bones[i].children.push_back(Mesh::Bone());
-
-        glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(&bone_child_node->mTransformation.a1);
-        mOffsetMatrix = glm::transpose(mOffsetMatrix);
-        meshPtr->bones[i].children.back().invBindPose = mOffsetMatrix;
-        meshPtr->bones[i].children.back().bindPose = glm::inverse(mOffsetMatrix);
-        meshPtr->bones[i].children.back().name = bone_child_node->mName.C_Str();
-
-        /*for (int child_mesh_i = 0; child_mesh_i < bone_child_node->mNumMeshes; ++child_mesh_i) {
-          const aiNode* bone_child_mesh = bone_child_node->mMeshes[child_mesh_i];
-          for (int child_mesh_i = 0; child_mesh_i < bone_child_mesh->; ++child_mesh_i) {
-            const aiNode* bone_child_mesh = bone_child_node->mMeshes[child_mesh_i];
-          }
-        }*/
-
-
-        /*meshPtr->bones[i].children.push_back(Mesh::Bone());
-
-        glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(bone_child->mOffsetMatrix.a1);
-        mOffsetMatrix = glm::transpose(mOffsetMatrix);
-        meshPtr->bones[i].children[j].invBindPose = mOffsetMatrix;
-        meshPtr->bones[i].children[j].bindPose = glm::inverse(mOffsetMatrix);
-        meshPtr->bones[i].children[j].name = bone_child->mName.C_Str();*/
+        meshPtr->bones[i].children.push_back(Mesh::Bone(
+          &bone_child_node->mTransformation.a1,
+          bone_child_node->mName.C_Str()
+        ));
       }
     }
   }

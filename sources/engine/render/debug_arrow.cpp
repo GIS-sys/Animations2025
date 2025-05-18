@@ -27,15 +27,15 @@ DebugArrow::DebugArrow() {
   std::vector<uint> indices;
   std::vector<vec3> vert;
   std::vector<vec3> normal;
-  vec3 c = vec3(0, 1, 0);
+  vec3 c = vec3(1, 0, 0);
   const int N = 4;
   vec3 p[N];
   for (int i = 0; i < N; i++)
   {
     float a1 = ((float)(i) / N) * 2 * PI;
     float a2 = ((float)(i + 1) / N) * 2 * PI;
-    vec3 p1 = p[i] = vec3(cos(a1), 0, sin(a1));
-    vec3 p2 = vec3(cos(a2), 0, sin(a2));
+    vec3 p1 = p[i] = vec3(0, cos(a1), sin(a1));
+    vec3 p2 = vec3(0, cos(a2), sin(a2));
     add_triangle(p2, p1, c, indices, vert, normal);
   }
   add_triangle(p[0], p[1], p[2], indices, vert, normal);

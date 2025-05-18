@@ -5,6 +5,7 @@
 #include <span>
 #include "3dmath.h"
 #include <vector>
+#include <assimp/defs.h>
 
 
 struct Mesh
@@ -15,6 +16,14 @@ struct Mesh
     glm::mat4x4 bindPose;
     glm::mat4x4 invBindPose;
     std::vector<Bone> children;
+
+    Bone(const ai_real* matrix_value, const char* name_cstr) {
+      glm::mat4x4 mOffsetMatrix = glm::make_mat4x4(matrix_value);
+      mOffsetMatrix = glm::transpose(mOffsetMatrix);
+      invBindPose = mOffsetMatrix;
+      bindPose = glm::inverse(mOffsetMatrix);
+      name = name_cstr;
+    }
   };
 
   std::string name;

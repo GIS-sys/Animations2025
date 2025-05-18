@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include <iostream>
 
+
 static void create_indices(std::span<const uint32_t> indices)
 {
   GLuint arrayIndexBuffer;

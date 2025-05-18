@@ -2,16 +2,14 @@
 #include <iostream>
 #include "engine/render/debug_arrow.h"
 
-void render_arrows(const std::vector<Mesh::Bone>& bones) {
+void render_arrows(const std::vector<Mesh::Bone>& bones, const mat4& transform) {
   for (const Mesh::Bone& bone : bones) {
     // std::cout << "bone " << bone.name << std::endl;
-    DebugArrow::add_arrow(bone.bindPose, vec3(0), vec3(0.1f, 0, 0), vec3(1, 0, 0), 0.01f);
-    DebugArrow::add_arrow(bone.bindPose, vec3(0), vec3(0, 0.1f, 0), vec3(0, 1, 0), 0.01f);
-    DebugArrow::add_arrow(bone.bindPose, vec3(0), vec3(0, 0, 0.1f), vec3(0, 0, 1), 0.01f);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0.1f, 0, 0), vec3(1, 0, 0), 0.01f);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0.1f, 0), vec3(0, 1, 0), 0.01f);
+    DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0, 0.1f), vec3(0, 0, 1), 0.01f);
     for (const auto& bone_child : bone.children) {
-      const auto& a = glm::vec3(bone.bindPose[3]);
-      const auto& b = bone.bindPose *  vec4(glm::vec3(0), 1);
-      DebugArrow::add_arrow(glm::vec3(bone.bindPose[3]), glm::vec3((bone.bindPose * bone_child.bindPose)[3]), vec3(0, 0.5f, 0.5f), 0.03f);
+      DebugArrow::add_arrow(glm::vec3((transform * bone.bindPose)[3]), glm::vec3((transform * bone.bindPose * bone_child.bindPose)[3]), vec3(0, 0.5f, 0.5f), 0.03f);
     }
   }
 }
@@ -38,7 +36,7 @@ void render_character(const Character &character, const mat4 &cameraProjView, ve
 
   for (const MeshPtr& mesh : character.meshes) {
     render(mesh);
-    render_arrows(mesh->bones);
+    render_arrows(mesh->bones, character.transform);
   }
 }
 
