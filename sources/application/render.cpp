@@ -1,10 +1,8 @@
 #include "scene.h"
-#include <iostream>
 #include "engine/render/debug_arrow.h"
 
 void render_arrows(const std::vector<Mesh::Bone>& bones, const mat4& transform) {
   for (const Mesh::Bone& bone : bones) {
-    // std::cout << "bone " << bone.name << std::endl;
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0.1f, 0, 0), vec3(1, 0, 0), 0.01f);
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0.1f, 0), vec3(0, 1, 0), 0.01f);
     DebugArrow::add_arrow(transform * bone.bindPose, vec3(0), vec3(0, 0, 0.1f), vec3(0, 0, 1), 0.01f);

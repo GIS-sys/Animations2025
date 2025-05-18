@@ -8,7 +8,6 @@
 #include "glad/glad.h"
 
 #include "import/model.h"
-#include <iostream>
 
 
 

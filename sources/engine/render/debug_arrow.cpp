@@ -78,23 +78,6 @@ void DebugArrow::_render(const mat4& cameraProjView, vec3 cameraPosition, const 
   shader.set_vec3("AmbientLight", light.ambient);
   shader.set_vec3("SunLight", light.lightColor);
 
-  /*// Rearrange arrows data
-  std::vector<mat4> instancesTm;
-  std::vector<vec4> instancesColor;
-  for (const Arrow& arrow : arrows) {
-    instancesTm.push_back(arrow.calc_transform());
-    instancesColor.push_back(arrow.calc_color());
-  }
-  // Render the arrows themselves in batches
-  const int BATCH_SIZE = 128;
-  for (int i = 0; i < arrows.size(); i += BATCH_SIZE)
-  {
-    int count = std::min(BATCH_SIZE, (int)(arrows.size()) - i);
-    shader.set_mat4x4("ArrowTm", std::span(instancesTm.data() + i, count));
-    shader.set_vec4("ArrowColor", std::span(instancesColor.data() + i, count));
-    render(arrowMesh, count);
-  }*/
-
   // Render the arrows themselves
   for (int i = 0; i < arrows.size(); i += 1)
   {
