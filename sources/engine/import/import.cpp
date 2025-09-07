@@ -8,6 +8,11 @@
 #include "glad/glad.h"
 
 #include "import/model.h"
+#include <iostream>
+#include <list>
+#include <assimp/scene.h>
+#include "application/util.h"
+
 
 MeshPtr create_mesh(const aiMesh *mesh)
 {
@@ -80,7 +85,67 @@ MeshPtr create_mesh(const aiMesh *mesh)
       weights[i] *= 1.f / s;
     }
   }
-  return create_mesh(mesh->mName.C_Str(), indices, vertices, normals, uv, weights, weightsIndex);
+
+  auto meshPtr = create_mesh(mesh->mName.C_Str(), indices, vertices, normals, uv, weights, weightsIndex);
+
+  // for skeleton
+  std::map<aiNode*, Mesh::Node*> skeletonNodesMap;
+  std::map<aiNode*, Mesh::Node*> skeletonArmaturesMap;
+
+  if (mesh->HasBones())
+  {
+    for (int i = 0; i < mesh->mNumBones; i++)
+    {
+      const aiBone* bone = mesh->mBones[i];
+      assert(bone->mNode != nullptr && "Model had no bones. Make sure you passed flag aiProcess_PopulateArmatureData to ReadFile");
+     
+      meshPtr->bones.push_back(Mesh::Bone(
+        &bone->mOffsetMatrix.a1,
+        bone->mName.C_Str()
+      ));
+      for (unsigned j = 0; j < bone->mNumWeights; j++)
+      {
+        meshPtr->bones.back().weight += bone->mWeights[j].mWeight;
+      }
+      meshPtr->bones.back().weight /= bone->mNumWeights;
+
+      // load skeleton
+      if (skeletonNodesMap.find(bone->mNode) == skeletonNodesMap.end()) {
+        meshPtr->nodes.push_back(Mesh::Node(bone->mNode));
+        skeletonNodesMap[bone->mNode] = &meshPtr->nodes.back();
+      }
+      if (skeletonArmaturesMap.find(bone->mArmature) == skeletonArmaturesMap.end()) {
+        meshPtr->nodesArmature.push_back(Mesh::Node(bone->mArmature));
+        skeletonArmaturesMap[bone->mArmature] = &meshPtr->nodesArmature.back();
+      }
+    }
+  }
+
+  // build skeleton
+  for (auto& ai_node : skeletonNodesMap) {
+    for (int i = 0; i < ai_node.first->mNumChildren; ++i) {
+      aiNode* ai_child = ai_node.first->mChildren[i];
+      if (skeletonNodesMap.find(ai_child) == skeletonNodesMap.end()) {
+        std::cout << "NOT FOUND CHILD " << ai_child->mName.C_Str() << " OF " << ai_node.second->self->mName.C_Str() << std::endl;
+      } else {
+        ai_node.second->children.push_back(skeletonNodesMap[ai_child]);
+      }
+    }
+    ai_node.second->parent = ai_node.second;
+  }
+  for (auto& ai_node : skeletonArmaturesMap) {
+    for (int i = 0; i < ai_node.first->mNumChildren; ++i) {
+      aiNode* ai_child = ai_node.first->mChildren[i];
+      if (skeletonArmaturesMap.find(ai_child) == skeletonArmaturesMap.end()) {
+        std::cout << "NOT FOUND CHILD " << ai_child->mName.C_Str() << " OF " << ai_node.second->self->mName.C_Str() << std::endl;
+      } else {
+        ai_node.second->children.push_back(skeletonArmaturesMap[ai_child]);
+      }
+    }
+    ai_node.second->parent = ai_node.second;
+  }
+
+  return meshPtr;
 }
 
 ModelAsset load_model(const char *path)
@@ -91,7 +156,7 @@ ModelAsset load_model(const char *path)
   importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 1.f);
 
   importer.ReadFile(path, aiPostProcessSteps::aiProcess_Triangulate | aiPostProcessSteps::aiProcess_LimitBoneWeights |
-                              aiPostProcessSteps::aiProcess_GenNormals | aiProcess_GlobalScale | aiProcess_FlipWindingOrder);
+                              aiPostProcessSteps::aiProcess_GenNormals | aiProcess_GlobalScale | aiProcess_FlipWindingOrder | aiProcess_PopulateArmatureData);
 
   const aiScene *scene = importer.GetScene();
   ModelAsset model;

@@ -58,6 +58,11 @@ public:
 		glUniformMatrix4fv(uniform_location, 1, transpose, glm::value_ptr(matrix));
 	}
 
+	void set_mat4x4(const char* name, const mat4* matrix, size_t size, bool transpose = false) const
+	{
+		glUniformMatrix4fv(glGetUniformLocation(program, name), size, transpose, (const float*)matrix);
+	}
+
 	void set_float(const char *name, const float &v) const
 	{
 		set_float(glGetUniformLocation(program, name), v);

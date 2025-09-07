@@ -1,6 +1,8 @@
 #include "mesh.h"
 #include <vector>
 #include "glad/glad.h"
+#include <iostream>
+
 
 static void create_indices(std::span<const uint32_t> indices)
 {
@@ -40,7 +42,7 @@ static MeshPtr create_mesh_impl(const char *name, std::span<const uint32_t> indi
   (init_channel(channelIdx++, channels), ...);
 
   create_indices(indices);
-  return std::make_shared<Mesh>(name, vertexArrayBufferObject, indices.size());
+  return std::make_shared<Mesh>(name, vertexArrayBufferObject, indices.size(), std::vector<Mesh::Bone>(), std::list<Mesh::Node>(), std::list<Mesh::Node>());
 }
 
 MeshPtr create_mesh(
@@ -65,11 +67,13 @@ MeshPtr create_mesh(
   return create_mesh_impl(name, indices, vertices, normals, uv);
 }
 
-
-void render(const MeshPtr &mesh)
+MeshPtr create_mesh(
+  const char* name,
+  std::span<const uint32_t> indices,
+  std::span<const vec3> vertices,
+  std::span<const vec3> normals)
 {
-  glBindVertexArray(mesh->vertexArrayBufferObject);
-  glDrawElementsBaseVertex(GL_TRIANGLES, mesh->numIndices, GL_UNSIGNED_INT, 0, 0);
+  return create_mesh_impl(name, indices, vertices, normals);
 }
 
 MeshPtr make_plane_mesh()
