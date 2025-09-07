@@ -69,6 +69,21 @@ add_folder(application)
 add_folder(engine)
 add_folder(3rd_party/imgui)
 
+# SET(ozz_build_tools OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_fbx OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_gltf OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_samples OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_howtos OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_tests OFF CACHE BOOL "" FORCE)
+# SET(ozz_build_postfix OFF CACHE BOOL "" FORCE)
+# add_subdirectory(3rd_party/ozz)
+# include_directories(3rd_party/ozz/include)
+
+# set(ADDITIONAL_LIBS ${ADDITIONAL_LIBS}
+#   ozz_geometry
+#   ozz_animation_offline
+#   ozz_options)
+
 set(EXE_SOURCES ${EXE_SOURCES} ${SRC_ROOT}/3rd_party/glad/glad.c)
 
 include_directories(${SRC_ROOT})
@@ -76,7 +91,7 @@ include_directories(${SRC_ROOT}/engine)
 include_directories(${SRC_ROOT}/3rd_party)
 include_directories(${SRC_ROOT}/3rd_party/ozz/include)
 
-add_executable(${EXE_NAME} ${EXE_SOURCES})
+add_executable(${EXE_NAME} ${EXE_SOURCES} "application/util.h" "application/util.cpp")
 
 target_link_libraries(${EXE_NAME} ${ADDITIONAL_LIBS})
 
